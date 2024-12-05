@@ -28,6 +28,10 @@ const profileSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
+    dob: {
+        type: Date,
+        required: [true, "Dob is required."],
+    },
     avatar: {
         type: String,
         required: true

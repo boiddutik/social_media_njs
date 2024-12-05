@@ -1,76 +1,93 @@
-// import { asyncHandler } from "../utils/asyncHandler.js"
-// import { ApiResponse } from "../utils/apiResponse.js"
-// import { ApiError } from "../utils/apiError.js"
-import { User } from "../models/user.model.js"
 
+
+
+import { User } from "../models/user.model.js";
+import { Profile } from "../models/profile.model.js";
+import mongoose from "mongoose";
 
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
         const user = await User.findById(userId)
         const accessToken = user.generateAccessToken()
         const refreshToken = user.generateRefreshToken()
-
         user.refreshToken = refreshToken
         await user.save({ validateBeforeSave: false })
-
         return { accessToken, refreshToken }
-
-
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generating referesh and access token")
     }
 }
 
-const registerUser = (req, res) => {
-    const reqHead = req.headers;
-    const reqBody = req.body;
-    const reqParams = req.params;
-    console.log("+++++++++++++++")
-    console.log(reqHead)
-    console.log(reqBody)
-    console.log(reqParams)
-    console.log("+++++++++++++++")
+const createUser = async (req, res) => {
+    try {
+        console.log("Uploaded files:", req.files);
 
-}
+        const { userName, email, password, fullName, dob, profession } = req.body;
+        const avatar = req.files?.avatar?.[0]?.path;
+        const cover = req.files?.cover?.[0]?.path || "";
 
-// const registerUser = asyncHandler(async (req, res) => {
-//     const { userName, fullName, email, password } = req.body;
-//     if (
-//         [userName, fullName, email, password].some((field) => field?.trim() === "")
-//     ) {
-//         throw new ApiError(400, "All fields are required")
-//     }
-//     const userAlreadyExists = await User.findOne({
-//         $or: [{ userName }, { email }]
-//     })
-//     if (userAlreadyExists) {
-//         throw new ApiError(409, "User already exists")
-//     }
-//     const avatar = req.files?.avatar[0]?.path;
-//     let cover;
-//     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-//         cover = req.files.coverImage[0].path
-//     }
-//     if (!avatar) {
-//         throw new ApiError(400, "Avatar file is required")
-//     }
-//     const createdUser = await User.create(
-//         {
-//             userName: userName,
-//             fullName,
-//             avatar: avatar,
-//             cover: cover || "",
-//             email,
-//             password,
-//         },
-//     )
-//     const user = await User.findById(createdUser._id).select("-password -refreshToken")
-//     if (!user) {
-//         throw new ApiError(500, "Something went wrong while registering user")
-//     }
-//     return res.status(201).json(new ApiResponse(201, user, "User registration complete."))
-// })
+        console.log(`UserName: ${userName}`);
+        console.log(`Email: ${email}`);
+        console.log(`Password: ${password}`);
+        console.log(`Full Name: ${fullName}`);
+        console.log(`Date of Birth: ${dob}`);
+        console.log(`Profession: ${profession}`);
+        console.log(`Avatar: ${avatar}`);
+        console.log(`Cover: ${cover}`);
+
+        if (!userName || !email || !password || !fullName || !dob || !profession || !avatar) {
+            return res.status(400).json({ message: "Missing required fields." });
+        }
+
+        // Create the user with all the necessary profile data
+        const createdUser = await User.create({
+            userName,
+            email,
+            password,
+        });
+
+        console.log(`User created:`, createdUser);
+
+        // After user creation, create the profile for the user
+        const profile = new Profile({
+            user: createdUser._id,
+            userName,
+            fullName,
+            dob,
+            profession,
+            avatar,
+            cover
+        });
+
+        await profile.save();
+
+        createdUser.profile = profile._id;
+        await createdUser.save({ validateBeforeSave: false });
+
+        // Exclude sensitive data
+        const userWithoutSensitiveData = await User.findById(createdUser._id).select("-password -refreshToken");
+
+        return res.status(201).json({
+            message: "Account created successfully.",
+            user: userWithoutSensitiveData,
+        });
+
+    } catch (error) {
+        console.error("Error creating user:", error.message);
+
+        if (error.code === 11000) {
+            return res.status(400).json({
+                message: `Duplicate field: ${Object.keys(error.keyValue).join(", ")} already exists.`,
+            });
+        }
+
+        res.status(500).json({ message: "Could not create account.", error: error.message });
+    }
+};
+
+
+
 
 export {
-    registerUser
+    createUser
 }
