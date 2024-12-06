@@ -5,7 +5,7 @@ import {
     getChatById,
     updateMessageStatus,
     deleteChatMessage,
-} from "../controllers/chatController.js";
+} from "../controllers/chat.controllers.js";
 
 const router = express.Router();
 

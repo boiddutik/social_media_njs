@@ -1,6 +1,6 @@
-import { Post } from '../models/Post';
-import { Comment } from '../models/Comment';
-import { Profile } from '../models/Profile';
+import { Post } from '../models/post.model.js';
+import { Comment } from '../models/comment.model.js';
+import { Profile } from '../models/profile.model.js';
 
 export const createPost = async (req, res) => {
     const { title, description, type, media } = req.body;
@@ -92,7 +92,6 @@ export const getAllPosts = async (req, res) => {
         res.status(500).json({ message: "Error fetching posts" });
     }
 };
-
 
 export const getPostById = async (req, res) => {
     const { postId } = req.params;

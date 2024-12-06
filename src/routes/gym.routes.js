@@ -9,7 +9,9 @@ import {
     likeGym,
     unlikeGym,
     addComment,
-    removeComment
+    removeComment,
+    joinGym,
+    unjoinGym
 } from "../controllers/gym.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 

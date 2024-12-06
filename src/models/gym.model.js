@@ -114,6 +114,6 @@ const gymSchema = new mongoose.Schema(
 );
 
 // Compound index for optimized queries
-chatSchema.index({ conversation: 1, sender: 1 });
+gymSchema.index({ conversation: 1, sender: 1 });
 
 export const GYM = mongoose.model("GYM", gymSchema);

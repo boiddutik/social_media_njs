@@ -8,8 +8,8 @@ import {
     deletePost,
     likePost,
     unlikePost,
-    addComment,
-    removeComment,
+    // addComment,
+    // removeComment,
     reportPost,
     expressInterest,
     purchasePost,
@@ -38,11 +38,11 @@ router.route("/posts/:postId/unlike")
     .post(verifyJWT, unlikePost);
 
 
-router.route("/posts/:postId/comment")
-    .post(verifyJWT, addComment);
+// router.route("/posts/:postId/comment")
+//     .post(verifyJWT, addComment);
 
-router.route("/posts/:postId/comment/:commentId")
-    .delete(verifyJWT, removeComment);
+// router.route("/posts/:postId/comment/:commentId")
+//     .delete(verifyJWT, removeComment);
 
 
 router.route("/posts/:postId/report")

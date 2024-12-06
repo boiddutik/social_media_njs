@@ -14,7 +14,7 @@ import {
     likeReply,
     unLikeReply,
     reportReply,
-} from "../controllers/commentController.js";
+} from "../controllers/comment.controllers.js";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
-import { Conversation } from "../models/Conversation";
-import { Profile } from "../models/Profile";
+import { Conversation } from "../models/conversation.model.js";
+import { Profile } from "../models/profile.model.js";
 
 export const createConversation = async (req, res) => {
     const { type, people, title } = req.body;

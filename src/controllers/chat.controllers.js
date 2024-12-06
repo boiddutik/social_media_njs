@@ -1,5 +1,5 @@
-import { Chat } from "../models/chatModel.js";
-import { Profile } from "../models/Profile.js";
+import { Chat } from "../models/chat.model.js";
+import { Profile } from "../models/profile.model.js";
 
 
 export const createChat = async (req, res) => {

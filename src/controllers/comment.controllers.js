@@ -1,5 +1,5 @@
-import { Comment } from "../models/commentModel.js";
-import { Profile } from "../models/Profile.js";
+import { Comment } from "../models/comment.model.js";
+import { Profile } from "../models/profile.model.js";
 
 export const createComment = async (req, res) => {
     try {
@@ -251,3 +251,25 @@ export const unLikeReply = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const reportReply = async (req, res) => {
+    try {
+        const { replyId } = req.params;
+        const { user } = req.body;
+        const userProfile = await Profile.findOne({ user: user });
+        if (!userProfile) {
+            return res.status(404).json({ message: "User profile not found" });
+        }
+        const reply = await Comment.findById(replyId);
+        if (!reply) return res.status(404).json({ message: "Reply not found" });
+        if (!reply.reports.includes(user)) {
+            reply.reports.push(user);
+            await reply.save();
+        }
+
+        return res.status(200).json({ message: "Reply reported", reports: reply.reports });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+

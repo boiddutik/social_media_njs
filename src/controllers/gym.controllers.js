@@ -1,6 +1,6 @@
-import { GYM } from "../models/GYM";
-import { Comment } from "../models/Comment";
-import { Profile } from "../models/Profile"; // Ensure Profile is imported
+import { GYM } from "../models/gym.model.js";
+import { Comment } from "../models/comment.model.js";
+import { Profile } from "../models/profile.model.js"; // Ensure Profile is imported
 
 export const createGym = async (req, res) => {
     const { Name, description, latitude, longitude, address, media } = req.body;
