@@ -161,15 +161,72 @@ const refreshAccessToken = async (req, res) => {
     }
 }
 
-// const refreshAccessToken = async (req, res) => {
-// return res.status(200).cookie("accessToken", accessToken, options)
-//     .cookie("refreshToken", refreshToken, options).json({
-//         message: "User logged In Successfully.",
-//         user: loggedInUser, jwt: accessToken, rwt: refreshToken, profile: loggedInUserProfile,
-//     });
-//     res.status(401).json({ message: "Invalid user credentials" });
-// }
+const changePassword = async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    if (oldPassword === newPassword) {
+        throw new ApiError(401, "Please enter a new password!")
+    }
+    const user = await User.findById(req.user?._id)
+    if (!user) {
+        throw new ApiError(401, "Couldnot find user.")
+    }
+    const isPasswordValid = await user.isPasswordCorrect(oldPassword)
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Incorrect old password.")
+    }
+    user.password = newPassword
+    await user.save({ validateBeforeSave: false })
+    return res.status(200).json({ "message": "Password Changed." })
+}
+
+const changeUsername = async (req, res) => {
+    const { userName } = req.body;
+    if (userName.length < 3) {
+        throw new ApiError(401, "Username cannot be less than 3 units.")
+    }
+    const user = await User.findById(req.user?._id)
+    if (!user) {
+        throw new ApiError(401, "Couldnot find user.")
+    }
+    user.userName = userName
+    await user.save({ validateBeforeSave: false })
+    return res.status(200).json({ "message": "Username updated.", "userName": username })
+}
+
+const changeEmail = async (req, res) => {
+    const { email } = req.body;
+    if (email.length < 8) {
+        throw new ApiError(401, "Please enter a valid email.")
+    }
+    const user = await User.findById(req.user?._id)
+    if (!user) {
+        throw new ApiError(401, "Couldnot find user.")
+    }
+    user.email = email
+    await user.save({ validateBeforeSave: false })
+    return res.status(200).json({ "message": "Email updated.", "email": email })
+}
+
+const getCurrentUser = async (req, res) => {
+    const user = await User.findById(req.user?._id)
+    if (!user) {
+        res.status(404).json({ message: "User does not exist" });
+    }
+    const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(user._id)
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+    const loggedInUserProfile = await Profile.findById(user.profile)
+    // console.log(loggedInUserProfile)
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+    return res.status(200).cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options).json({
+            message: "Current User Details.",
+            user: loggedInUser, jwt: accessToken, rwt: refreshToken, profile: loggedInUserProfile,
+        });
+}
 
 export {
-    createUser, loginUser, logOut, refreshAccessToken
+    createUser, loginUser, logOut, refreshAccessToken, changePassword, changeUsername, changeEmail, getCurrentUser
 }
