@@ -66,8 +66,8 @@ const updateProfileDetails = async (req, res) => {
             return res.status(400).json({ message: "Invalid or missing profile ID." });
         }
 
-        if (updateData._id || updateData.userName) {
-            return res.status(400).json({ message: "Cannot update _id or userName." });
+        if (updateData._id || updateData.userName || updateData.user) {
+            return res.status(400).json({ message: "Cannot update _id(profileId), user(userId), userName." });
         }
 
         const updatedProfile = await Profile.findByIdAndUpdate(
@@ -89,6 +89,7 @@ const updateProfileDetails = async (req, res) => {
         res.status(500).json({ message: "Could not update profile.", error: error.message });
     }
 };
+
 
 
 export {
