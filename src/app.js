@@ -17,5 +17,4 @@ app.use("/api/v1/ping", (_, res) => {
 })
 app.use("/api/v1/user", userRouter)
 
-
 export { app };
