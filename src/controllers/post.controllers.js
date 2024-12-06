@@ -28,24 +28,71 @@ export const createPost = async (req, res) => {
 };
 
 export const getAllPosts = async (req, res) => {
-    const { page = 1, limit = 10, typeFilter } = req.query;
+    // const { privacyFilter = 'Everyone' } = req.query;  // Default to 'Everyone'
+    const privacyFilter = 'Everyone'
+    const userId = req.user.id;  // Logged-in user ID
     try {
-        const posts = await Post.find(typeFilter ? { type: typeFilter } : {})
-            .skip((page - 1) * limit)
-            .limit(limit)
+        // Step 1: Fetch posts from the logged-in user
+        const userPosts = await Post.find({ user: userId })
             .populate("user")
             .populate("comments")
             .populate("likes")
             .populate("unLikes")
             .populate("shares")
-            .populate("views");
+            .populate("views")
+            .populate({
+                path: "user", // Populate the user's profile data associated with the post
+                populate: {
+                    path: "profile", // Assuming Profile model is linked with the User
+                }
+            });
+        // Step 2: Fetch posts from the user's following list
+        const profile = await Profile.findOne({ user: userId }).populate('following');
+        const followingUserIds = profile.following.map(follow => follow.user.toString());
 
-        return res.status(200).json(posts);
+        const followingPosts = await Post.find({
+            user: { $in: followingUserIds },
+            privacy: { $ne: 'Private' },  // Exclude private posts from following
+        })
+            .populate("user")
+            .populate("comments")
+            .populate("likes")
+            .populate("unLikes")
+            .populate("shares")
+            .populate("views")
+            .populate({
+                path: "user",
+                populate: {
+                    path: "profile",
+                }
+            });
+        // Step 3: Fetch posts with privacy "Everyone"
+        const publicPosts = await Post.find({
+            privacy: privacyFilter,  // Only posts that are public or "Everyone"
+        })
+            .populate("user")
+            .populate("comments")
+            .populate("likes")
+            .populate("unLikes")
+            .populate("shares")
+            .populate("views")
+            .populate({
+                path: "user",
+                populate: {
+                    path: "profile",
+                }
+            });
+        // Combine the posts (user posts, following posts, public posts)
+        const allPosts = [...userPosts, ...followingPosts, ...publicPosts];
+        // Optional: Sort combined posts (e.g., by creation date, descending)
+        allPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        return res.status(200).json(allPosts);
     } catch (error) {
         console.error("Error fetching posts:", error.message);
         res.status(500).json({ message: "Error fetching posts" });
     }
 };
+
 
 export const getPostById = async (req, res) => {
     const { postId } = req.params;

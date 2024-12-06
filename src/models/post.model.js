@@ -13,6 +13,13 @@ const postSchema = new mongoose.Schema(
             ref: "Profile",
             required: true,
         },
+        privacy: {
+            type: String,
+            trim: true,
+            enum: ["Public", "Everyone"],
+            require: true,
+            index: true,
+        },
         associates: [
             {
                 role: {
