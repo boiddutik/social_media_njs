@@ -11,10 +11,12 @@ app.use("/api/v1/public", express.static("public"));
 app.use(cookieParser())
 // --
 import userRouter from "./routes/user.routes.js"
+import profileRouter from "./routes/profile.routes.js"
 // --
 app.use("/api/v1/ping", (_, res) => {
     return res.send("Backend is Running")
 })
 app.use("/api/v1/user", userRouter)
+app.use("/api/v1/profile", profileRouter)
 
 export { app };
