@@ -196,7 +196,136 @@ const followRequestDecision = async (req, res) => {
 };
 
 
+const unfollowProfile = async (req, res) => {
+    const { profileId } = req.params;
+    const senderId = req.user.id;
+
+    try {
+        const receiverProfile = await Profile.findOne({ user: profileId });
+        const senderProfile = await Profile.findOne({ user: senderId });
+
+        if (!receiverProfile || !senderProfile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+
+        // Check if the sender is already following the receiver
+        if (!senderProfile.followerings.includes(profileId)) {
+            return res.status(400).json({ message: "You are not following this user." });
+        }
+
+        // Remove receiver from sender's following list and sender from receiver's followers list
+        senderProfile.followerings = senderProfile.followerings.filter(id => id.toString() !== profileId);
+        receiverProfile.followers = receiverProfile.followers.filter(id => id.toString() !== senderId);
+
+        await senderProfile.save();
+        await receiverProfile.save();
+
+        return res.status(200).json({ message: "Unfollowed successfully." });
+    } catch (error) {
+        console.error("Error unfollowing profile:", error.message);
+        res.status(500).json({ message: "Could not unfollow profile.", error: error.message });
+    }
+};
+
+const blockProfile = async (req, res) => {
+    const { profileId } = req.params;
+    const senderId = req.user.id;
+
+    try {
+        const receiverProfile = await Profile.findOne({ user: profileId });
+        const senderProfile = await Profile.findOne({ user: senderId });
+
+        if (!receiverProfile || !senderProfile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+
+        // Check if sender is already blocking the receiver
+        if (senderProfile.blockList.includes(profileId)) {
+            return res.status(400).json({ message: "You have already blocked this user." });
+        }
+
+        // Add the receiver to sender's block list
+        senderProfile.blockList.push(profileId);
+        await senderProfile.save();
+
+        // Optionally, remove the user from followerings or followers if needed
+        senderProfile.followerings = senderProfile.followerings.filter(id => id.toString() !== profileId);
+        receiverProfile.followers = receiverProfile.followers.filter(id => id.toString() !== senderId);
+
+        await senderProfile.save();
+        await receiverProfile.save();
+
+        return res.status(200).json({ message: "User blocked successfully." });
+    } catch (error) {
+        console.error("Error blocking profile:", error.message);
+        res.status(500).json({ message: "Could not block profile.", error: error.message });
+    }
+};
+
+const unblockProfile = async (req, res) => {
+    const { profileId } = req.params;
+    const senderId = req.user.id;
+
+    try {
+        const receiverProfile = await Profile.findOne({ user: profileId });
+        const senderProfile = await Profile.findOne({ user: senderId });
+
+        if (!receiverProfile || !senderProfile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+
+        // Check if sender is blocking the receiver
+        if (!senderProfile.blockList.includes(profileId)) {
+            return res.status(400).json({ message: "You are not blocking this user." });
+        }
+
+        // Remove the receiver from sender's block list
+        senderProfile.blockList = senderProfile.blockList.filter(id => id.toString() !== profileId);
+        await senderProfile.save();
+
+        return res.status(200).json({ message: "User unblocked successfully." });
+    } catch (error) {
+        console.error("Error unblocking profile:", error.message);
+        res.status(500).json({ message: "Could not unblock profile.", error: error.message });
+    }
+};
+
+const searchUsers = async (req, res) => {
+    const { query } = req.query;  // The search query passed by the client (userName, fullName, email)
+
+    if (!query) {
+        return res.status(400).json({ message: "Search query is required." });
+    }
+
+    try {
+        // Search for users based on userName, fullName, or email
+        const userResults = await User.find({
+            $or: [
+                { userName: { $regex: query, $options: "i" } },
+                { fullName: { $regex: query, $options: "i" } },
+                { email: { $regex: query, $options: "i" } }
+            ]
+        });
+
+        if (userResults.length === 0) {
+            return res.status(404).json({ message: "No users found matching the search query." });
+        }
+
+        // Retrieve profiles for the found users
+        const profiles = await Profile.find({
+            user: { $in: userResults.map(user => user._id) }
+        });
+
+        return res.status(200).json({
+            message: "Profiles found.",
+            profiles,
+        });
+    } catch (error) {
+        console.error("Error searching users:", error.message);
+        res.status(500).json({ message: "Could not perform search.", error: error.message });
+    }
+};
 
 export {
-    updateProfileAvatar, updateProfileCover, updateProfileDetails, followProfile, followRequestDecision
+    updateProfileAvatar, updateProfileCover, updateProfileDetails, followProfile, followRequestDecision, unfollowProfile, blockProfile, unblockProfile, searchUsers
 }
