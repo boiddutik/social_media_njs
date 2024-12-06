@@ -20,7 +20,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
 
 const createUser = async (req, res) => {
     try {
-        const { userName, email, password, fullName, dob, profession } = req.body;
+        const { userName, email, password, fullName, dob, profession, gender, country, state, city } = req.body;
         const avatar = req.files?.avatar?.[0]?.path;
         const cover = req.files?.cover?.[0]?.path || "";
         // console.log("Uploaded files:", req.files);
@@ -33,7 +33,7 @@ const createUser = async (req, res) => {
         // console.log(`Avatar: ${avatar}`);
         // console.log(`Cover: ${cover}`);
 
-        if (!userName || !email || !password || !fullName || !dob || !profession || !avatar) {
+        if (!userName || !email || !password || !fullName || !dob || !profession || !avatar || !gender || !country || !state || !city) {
             return res.status(400).json({ message: "Missing required fields." });
         }
 
@@ -52,7 +52,11 @@ const createUser = async (req, res) => {
             dob,
             profession,
             avatar,
-            cover
+            cover,
+            gender,
+            country,
+            state,
+            city
         });
 
         await profile.save();
