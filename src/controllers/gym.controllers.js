@@ -1,7 +1,7 @@
 import { GYM } from "../models/GYM";
 import { Comment } from "../models/Comment";
-import { Profile } from "../models/Profile";
-
+import { Profile } from "../models/Profile"; // Ensure Profile is imported
+import { User } from "../models/User"; // Assuming you have a User model to get the user ID.
 
 export const createGym = async (req, res) => {
     const { Name, description, latitude, longitude, address, media } = req.body;
@@ -17,6 +17,18 @@ export const createGym = async (req, res) => {
             media,
         });
         await gym.save();
+
+        // Create a profile for the gym owner if it doesn't exist
+        const ownerProfile = await Profile.findOne({ user: ownerId });
+        if (!ownerProfile) {
+            const newProfile = new Profile({
+                user: ownerId,
+                bio: `${req.user.name}'s Profile`,
+                avatar: req.user.avatar || "default_avatar_url", // Assuming this field
+            });
+            await newProfile.save();
+        }
+
         return res.status(201).json(gym);
     } catch (error) {
         console.error("Error creating gym:", error.message);
@@ -33,7 +45,15 @@ export const getAllGyms = async (req, res) => {
             .populate("unLikes")
             .populate("shares")
             .populate("views");
-        return res.status(200).json(gyms);
+
+        // For each gym, we can populate additional profile info if needed
+        const gymsWithProfiles = await Promise.all(gyms.map(async (gym) => {
+            const profile = await Profile.findOne({ user: gym.owner._id });
+            gym.owner.profile = profile;
+            return gym;
+        }));
+
+        return res.status(200).json(gymsWithProfiles);
     } catch (error) {
         console.error("Error fetching gyms:", error.message);
         res.status(500).json({ message: "Error fetching gyms" });
@@ -50,9 +70,14 @@ export const getGymById = async (req, res) => {
             .populate("unLikes")
             .populate("shares")
             .populate("views");
+
         if (!gym) {
             return res.status(404).json({ message: "Gym not found" });
         }
+
+        const profile = await Profile.findOne({ user: gym.owner._id });
+        gym.owner.profile = profile;
+
         return res.status(200).json(gym);
     } catch (error) {
         console.error("Error fetching gym:", error.message);
@@ -193,23 +218,47 @@ export const joinGym = async (req, res) => {
     const { gymId } = req.params;
     const userId = req.user.id;
     const { role } = req.body; // Role like "Manager", "Fighter", etc.
+
     if (!role || !["Manager", "Fighter", "Coordinator"].includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
     }
+
     try {
         const gym = await GYM.findById(gymId);
         if (!gym) {
             return res.status(404).json({ message: "Gym not found" });
         }
+
         const alreadyJoined = gym.associates.some(associate => associate.user.toString() === userId);
         if (alreadyJoined) {
             return res.status(400).json({ message: "You are already a member of this gym" });
         }
+
+        // Add user to gym associates
         gym.associates.push({
             user: userId,
             role
         });
-        await gym.save();
+
+        // Create or update the user's profile
+        let userProfile = await Profile.findOne({ user: userId });
+        if (!userProfile) {
+            userProfile = new Profile({
+                user: userId,
+                bio: `This is the profile of user ${userId}`,
+                avatar: "default_avatar_url",
+                associatedGyms: [gymId],  // Associate the gym if profile doesn't exist
+            });
+            await userProfile.save();
+        } else {
+            // Update profile to add the gym if it isn't already associated
+            if (!userProfile.associatedGyms.includes(gymId)) {
+                userProfile.associatedGyms.push(gymId);
+                await userProfile.save();
+            }
+        }
+
+        await gym.save(); // Save the gym after updating associates
         return res.status(200).json({ message: "Successfully joined the gym" });
     } catch (error) {
         console.error("Error joining gym:", error.message);
@@ -220,17 +269,34 @@ export const joinGym = async (req, res) => {
 export const unjoinGym = async (req, res) => {
     const { gymId } = req.params;
     const userId = req.user.id;
+
     try {
+        // Find the gym by ID
         const gym = await GYM.findById(gymId);
         if (!gym) {
             return res.status(404).json({ message: "Gym not found" });
         }
+
+        // Find the user in the gym's associates array
         const associateIndex = gym.associates.findIndex(associate => associate.user.toString() === userId);
         if (associateIndex === -1) {
             return res.status(400).json({ message: "You are not a member of this gym" });
         }
+
+        // Remove the user from the gym's associates array
         gym.associates.splice(associateIndex, 1);
         await gym.save();
+
+        // Find the user's profile
+        const userProfile = await Profile.findOne({ user: userId });
+        if (!userProfile) {
+            return res.status(404).json({ message: "User profile not found" });
+        }
+
+        // Remove the gym ID from the user's associatedGyms array
+        userProfile.associatedGyms = userProfile.associatedGyms.filter(gymIdInProfile => gymIdInProfile.toString() !== gymId.toString());
+        await userProfile.save();
+
         return res.status(200).json({ message: "Successfully left the gym" });
     } catch (error) {
         console.error("Error leaving gym:", error.message);

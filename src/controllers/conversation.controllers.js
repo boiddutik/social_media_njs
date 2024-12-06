@@ -1,7 +1,6 @@
 import { Conversation } from "../models/Conversation";
 import { Profile } from "../models/Profile";
 
-
 export const createConversation = async (req, res) => {
     const { type, people, title } = req.body;
     try {
@@ -11,6 +10,13 @@ export const createConversation = async (req, res) => {
             title,
         });
         await newConversation.save();
+        for (const personId of people) {
+            const profile = await Profile.findOne({ user: personId });
+            if (profile) {
+                profile.conversations.push(newConversation._id);
+                await profile.save();
+            }
+        }
         return res.status(201).json(newConversation);
     } catch (error) {
         console.error("Error creating conversation:", error.message);
@@ -26,7 +32,6 @@ export const getAllConversations = async (req, res) => {
         })
             .populate("people", "name email")
             .exec();
-
         return res.status(200).json(conversations);
     } catch (error) {
         console.error("Error fetching conversations:", error.message);
@@ -61,7 +66,12 @@ export const addPersonToConversation = async (req, res) => {
             return res.status(400).json({ message: "Person already in the conversation" });
         }
         conversation.people.push(personId);
-        await conversation.save()
+        await conversation.save();
+        const profile = await Profile.findOne({ user: personId });
+        if (profile) {
+            profile.conversations.push(conversation._id);
+            await profile.save();
+        }
         return res.status(200).json(conversation);
     } catch (error) {
         console.error("Error adding person to conversation:", error.message);
@@ -82,6 +92,11 @@ export const removePersonFromConversation = async (req, res) => {
         }
         conversation.people.splice(personIndex, 1);
         await conversation.save();
+        const profile = await Profile.findOne({ user: personId });
+        if (profile) {
+            profile.conversations = profile.conversations.filter(convId => convId.toString() !== conversationId);
+            await profile.save();
+        }
         return res.status(200).json(conversation);
     } catch (error) {
         console.error("Error removing person from conversation:", error.message);
@@ -96,10 +111,16 @@ export const deleteConversation = async (req, res) => {
         if (!conversation) {
             return res.status(404).json({ message: "Conversation not found" });
         }
+        for (const personId of conversation.people) {
+            const profile = await Profile.findOne({ user: personId });
+            if (profile) {
+                profile.conversations = profile.conversations.filter(convId => convId.toString() !== conversationId);
+                await profile.save();
+            }
+        }
         return res.status(200).json({ message: "Conversation deleted successfully" });
     } catch (error) {
         console.error("Error deleting conversation:", error.message);
         res.status(500).json({ message: "Error deleting conversation" });
     }
 };
-

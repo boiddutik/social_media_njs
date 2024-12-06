@@ -105,9 +105,36 @@ const profileSchema = new mongoose.Schema({
         ref: "Post",
         default: []
     },
+    unLikedPosts: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Post",
+        default: []
+    },
+    commentedPosts: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Comment",
+        default: []
+    },
     sharedPosts: {
         type: [mongoose.Schema.Types.ObjectId],
         ref: "Post",
+        default: []
+    },
+    associatedEvents: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Post",
+        default: []
+    },
+    purchasedEvents: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Post",
+        default: []
+    },
+
+    // Relationship with Gym
+    associatedGyms: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: "Gym",
         default: []
     },
 
