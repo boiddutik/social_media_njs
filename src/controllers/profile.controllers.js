@@ -2,6 +2,22 @@ import { User } from "../models/user.model.js";
 import { Profile } from "../models/profile.model.js";
 import mongoose from "mongoose";
 
+
+const getCurrentUserProfile = async (req, res) => {
+    const userId = req.user.id;
+
+    try {
+        const profile = await Profile.findOne({ user: userId });
+        if (!profile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+        return res.status(200).json({ profile });
+    } catch (error) {
+        console.error("Error getting current user's profile:", error.message);
+        res.status(500).json({ message: "Could not retrieve profile details.", error: error.message });
+    }
+};
+
 const updateProfileAvatar = async (req, res) => {
     try {
         const { profileId } = req.body;
@@ -87,6 +103,50 @@ const updateProfileDetails = async (req, res) => {
     } catch (error) {
         console.error("Error updating profile details:", error.message);
         res.status(500).json({ message: "Could not update profile.", error: error.message });
+    }
+};
+
+const getProfileByProfileIdDetails = async (req, res) => {
+    const { profileId } = req.params;
+    try {
+        const profile = await Profile.findById(profileId);
+        if (!profile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+        return res.status(200).json({ profile });
+    } catch (error) {
+        console.error("Error getting profile details:", error.message);
+        res.status(500).json({ message: "Could not retrieve profile details.", error: error.message });
+    }
+};
+
+const getFollowers = async (req, res) => {
+    const { profileId } = req.params;
+
+    try {
+        const profile = await Profile.findById(profileId).populate("followers");
+        if (!profile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+        return res.status(200).json({ followers: profile.followers });
+    } catch (error) {
+        console.error("Error getting followers:", error.message);
+        res.status(500).json({ message: "Could not retrieve followers.", error: error.message });
+    }
+};
+
+const getFollowing = async (req, res) => {
+    const { profileId } = req.params;
+
+    try {
+        const profile = await Profile.findById(profileId).populate("followerings");
+        if (!profile) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+        return res.status(200).json({ following: profile.followerings });
+    } catch (error) {
+        console.error("Error getting following:", error.message);
+        res.status(500).json({ message: "Could not retrieve following list.", error: error.message });
     }
 };
 
@@ -194,7 +254,6 @@ const followRequestDecision = async (req, res) => {
         res.status(500).json({ message: "Could not process follow request.", error: error.message });
     }
 };
-
 
 const unfollowProfile = async (req, res) => {
     const { profileId } = req.params;
@@ -327,5 +386,5 @@ const searchUsers = async (req, res) => {
 };
 
 export {
-    updateProfileAvatar, updateProfileCover, updateProfileDetails, followProfile, followRequestDecision, unfollowProfile, blockProfile, unblockProfile, searchUsers
+    getCurrentUserProfile, updateProfileAvatar, updateProfileCover, updateProfileDetails, getProfileByProfileIdDetails, getFollowers, getFollowing, followProfile, followRequestDecision, unfollowProfile, blockProfile, unblockProfile, searchUsers
 }
