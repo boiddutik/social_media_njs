@@ -70,19 +70,20 @@ export const getPostById = async (req, res) => {
 export const updatePost = async (req, res) => {
     const { postId } = req.params;
     const { title, description, type, media } = req.body;
+    const userId = req.user.id;
     try {
         const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
-
+        if (post.user.toString() !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this post" });
+        }
         post.title = title || post.title;
         post.description = description || post.description;
         post.type = type || post.type;
         post.media = media || post.media;
-
         await post.save();
-
         return res.status(200).json(post);
     } catch (error) {
         console.error("Error updating post:", error.message);
@@ -92,23 +93,26 @@ export const updatePost = async (req, res) => {
 
 export const deletePost = async (req, res) => {
     const { postId } = req.params;
+    const userId = req.user.id;
     try {
-        const post = await Post.findByIdAndDelete(postId);
+        const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
-
-        // Remove the post from the user's profile
+        if (post.user.toString() !== userId) {
+            return res.status(403).json({ message: "You are not authorized to delete this post" });
+        }
         const profile = await Profile.findOne({ user: post.user });
         profile.posts = profile.posts.filter(id => id.toString() !== postId);
         await profile.save();
-
+        await post.remove();
         return res.status(200).json({ message: "Post deleted successfully" });
     } catch (error) {
         console.error("Error deleting post:", error.message);
         res.status(500).json({ message: "Error deleting post" });
     }
 };
+
 
 export const likePost = async (req, res) => {
     const { postId } = req.params;
