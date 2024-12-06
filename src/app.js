@@ -12,7 +12,7 @@ app.use(cookieParser())
 // --
 import userRouter from "./routes/user.routes.js"
 // --
-app.use("/api/v1/ping", (req, res) => {
+app.use("/api/v1/ping", (_, res) => {
     return res.send("Backend is Running")
 })
 app.use("/api/v1/user", userRouter)

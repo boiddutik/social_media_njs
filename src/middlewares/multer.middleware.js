@@ -10,7 +10,6 @@ const uploadDir = path.join(rootDir, "public", "temp");
 
 try {
     fs.mkdirSync(uploadDir, { recursive: true });
-    console.log(`Directory ${uploadDir} created or already exists.`);
 } catch (error) {
     console.error("Error creating directory:", error);
 }

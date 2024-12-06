@@ -35,15 +35,13 @@ userSchema.pre("save", async function (next) {
     if (this.isModified("password")) {
         this.password = await bcrypt.hash(this.password, 10);
     }
-
-    if (this.isModified("userName")) {
-        const profile = await Profile.findOne({ user: this._id });
-        if (profile) {
-            profile.userName = this.userName;
-            await profile.save();
-        }
-    }
-
+    // if (this.isModified("userName")) {
+    //     const profile = await Profile.findOne({ user: this._id });
+    //     if (profile) {
+    //         profile.userName = this.userName;
+    //         await profile.save();
+    //     }
+    // }
     next();
 });
 
