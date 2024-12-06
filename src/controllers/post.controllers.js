@@ -113,7 +113,6 @@ export const deletePost = async (req, res) => {
     }
 };
 
-
 export const likePost = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
