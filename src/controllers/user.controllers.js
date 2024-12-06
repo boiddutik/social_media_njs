@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 
 import { ApiError } from "../utils/api.error.js"
-import { ApiResponse } from "../utils/api.response.js";
 
 const generateAccessAndRefereshTokens = async (userId) => {
     try {
@@ -117,7 +116,6 @@ const logOut = async (req, res) => {
         req.user._id, {
         $set: {
             refreshToken: undefined,
-
         }
     },
         { new: true }
@@ -131,7 +129,10 @@ const logOut = async (req, res) => {
         .status(200)
         .clearCookie("accessToken", options)
         .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "User logged Out"))
+        .json({
+            message: "User logged Out.",
+        })
+
 }
 
 const refreshAccessToken = async (req, res) => {
