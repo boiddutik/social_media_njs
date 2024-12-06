@@ -1,14 +1,8 @@
 import mongoose from "mongoose";
 
-const postSchema = new mongoose.Schema(
+const gymSchema = new mongoose.Schema(
     {
-        type: {
-            type: String,
-            trim: true,
-            enum: ["Post", "Event"],
-            require: true,
-        },
-        user: {
+        owner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Profile",
             required: true,
@@ -25,7 +19,7 @@ const postSchema = new mongoose.Schema(
                 },
             },
         ],
-        title: {
+        Name: {
             type: String,
             trim: true,
             required: true,
@@ -43,14 +37,10 @@ const postSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        venue: {
+        address: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "GYM",
             index: true,
-        },
-        address: {
-            type: String,
-            trim: true,
         },
         media: [
             {
@@ -122,4 +112,7 @@ const postSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-export const Post = mongoose.model("Post", postSchema);
+// Compound index for optimized queries
+chatSchema.index({ conversation: 1, sender: 1 });
+
+export const GYM = mongoose.model("GYM", gymSchema);
