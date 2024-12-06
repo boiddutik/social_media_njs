@@ -11,7 +11,8 @@ const gymSchema = new mongoose.Schema(
             {
                 role: {
                     type: String,
-                    enum: ["Manager", "Fighter", "Coordinator"],
+                    enum: ["Manager", "Fighter", "Coordinator", "Member"],
+                    default: "Member"
                 },
                 user: {
                     type: mongoose.Schema.Types.ObjectId,
