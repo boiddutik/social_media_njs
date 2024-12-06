@@ -18,7 +18,6 @@ export const createConversation = async (req, res) => {
     }
 };
 
-
 export const getAllConversations = async (req, res) => {
     const userId = req.user.id;
     try {
@@ -35,7 +34,6 @@ export const getAllConversations = async (req, res) => {
     }
 };
 
-
 export const getConversationById = async (req, res) => {
     const { conversationId } = req.params;
     try {
@@ -50,7 +48,6 @@ export const getConversationById = async (req, res) => {
         res.status(500).json({ message: "Error fetching conversation" });
     }
 };
-
 
 export const addPersonToConversation = async (req, res) => {
     const { conversationId } = req.params;
@@ -72,7 +69,6 @@ export const addPersonToConversation = async (req, res) => {
     }
 };
 
-
 export const removePersonFromConversation = async (req, res) => {
     const { conversationId, personId } = req.params;
     try {
@@ -92,7 +88,6 @@ export const removePersonFromConversation = async (req, res) => {
         res.status(500).json({ message: "Error removing person from conversation" });
     }
 };
-
 
 export const deleteConversation = async (req, res) => {
     const { conversationId } = req.params;

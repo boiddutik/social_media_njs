@@ -1,12 +1,10 @@
 import { Post } from '../models/Post';
 import { Comment } from '../models/Comment';
-import { Profile } from '../models/Profile';  // Assuming you have this model
+import { Profile } from '../models/Profile';
 
-// Create a new post
 export const createPost = async (req, res) => {
     const { title, description, type, media } = req.body;
-    const userId = req.user.id;  // From verified JWT
-
+    const userId = req.user.id;
     try {
         const post = new Post({
             user: userId,
@@ -23,10 +21,8 @@ export const createPost = async (req, res) => {
     }
 };
 
-// Get all posts with pagination and filters (if needed)
 export const getAllPosts = async (req, res) => {
     const { page = 1, limit = 10, typeFilter } = req.query;
-
     try {
         const posts = await Post.find(typeFilter ? { type: typeFilter } : {})
             .skip((page - 1) * limit)
@@ -37,7 +33,6 @@ export const getAllPosts = async (req, res) => {
             .populate("unLikes")
             .populate("shares")
             .populate("views");
-
         return res.status(200).json(posts);
     } catch (error) {
         console.error("Error fetching posts:", error.message);
@@ -45,10 +40,8 @@ export const getAllPosts = async (req, res) => {
     }
 };
 
-// Get a post by ID
 export const getPostById = async (req, res) => {
     const { postId } = req.params;
-
     try {
         const post = await Post.findById(postId)
             .populate("user")
@@ -57,7 +50,6 @@ export const getPostById = async (req, res) => {
             .populate("unLikes")
             .populate("shares")
             .populate("views");
-
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
@@ -68,22 +60,18 @@ export const getPostById = async (req, res) => {
     }
 };
 
-// Update a post
 export const updatePost = async (req, res) => {
     const { postId } = req.params;
     const { title, description, type, media } = req.body;
-
     try {
         const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
-
         post.title = title || post.title;
         post.description = description || post.description;
         post.type = type || post.type;
         post.media = media || post.media;
-
         await post.save();
         return res.status(200).json(post);
     } catch (error) {
@@ -92,10 +80,8 @@ export const updatePost = async (req, res) => {
     }
 };
 
-// Delete a post
 export const deletePost = async (req, res) => {
     const { postId } = req.params;
-
     try {
         const post = await Post.findByIdAndDelete(postId);
         if (!post) {
@@ -108,20 +94,15 @@ export const deletePost = async (req, res) => {
     }
 };
 
-// Like a post
 export const likePost = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
-
-        // Check if user already liked the post
         if (post.likes.includes(userId)) {
             return res.status(400).json({ message: "You already liked this post." });
         }
-
         post.likes.push(userId);
         await post.save();
         return res.status(200).json(post);
@@ -131,20 +112,15 @@ export const likePost = async (req, res) => {
     }
 };
 
-// Unlike a post
 export const unlikePost = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
-
-        // Check if user already unliked the post
         if (!post.likes.includes(userId)) {
             return res.status(400).json({ message: "You haven't liked this post yet." });
         }
-
         post.likes = post.likes.filter(id => id.toString() !== userId);
         await post.save();
         return res.status(200).json(post);
@@ -154,26 +130,21 @@ export const unlikePost = async (req, res) => {
     }
 };
 
-// Add a comment to a post
 export const addComment = async (req, res) => {
     const { postId } = req.params;
     const { text } = req.body;
     const userId = req.user.id;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
-
         const comment = new Comment({
             user: userId,
             text,
             post: postId,
         });
-
         await comment.save();
         post.comments.push(comment);
         await post.save();
-
         return res.status(201).json(comment);
     } catch (error) {
         console.error("Error adding comment:", error.message);
@@ -181,20 +152,15 @@ export const addComment = async (req, res) => {
     }
 };
 
-// Remove a comment from a post
 export const removeComment = async (req, res) => {
     const { postId, commentId } = req.params;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
-
         const comment = await Comment.findById(commentId);
         if (!comment) return res.status(404).json({ message: "Comment not found" });
-
         post.comments = post.comments.filter(c => c.toString() !== commentId);
         await post.save();
-
         await comment.remove();
         return res.status(200).json({ message: "Comment removed" });
     } catch (error) {
@@ -203,14 +169,11 @@ export const removeComment = async (req, res) => {
     }
 };
 
-// Report a post
 export const reportPost = async (req, res) => {
     const { postId } = req.params;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
-
         post.reported = true;
         await post.save();
         return res.status(200).json({ message: "Post reported successfully" });
@@ -220,11 +183,9 @@ export const reportPost = async (req, res) => {
     }
 };
 
-// Express interest in a post
 export const expressInterest = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
@@ -232,7 +193,6 @@ export const expressInterest = async (req, res) => {
         if (post.interestedUsers.includes(userId)) {
             return res.status(400).json({ message: "You have already expressed interest in this post." });
         }
-
         post.interestedUsers.push(userId);
         await post.save();
         return res.status(200).json({ message: "Interest expressed" });
@@ -242,11 +202,9 @@ export const expressInterest = async (req, res) => {
     }
 };
 
-// Purchase a post
 export const purchasePost = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
@@ -254,7 +212,6 @@ export const purchasePost = async (req, res) => {
         if (post.purchasedUsers.includes(userId)) {
             return res.status(400).json({ message: "You have already purchased this post." });
         }
-
         post.purchasedUsers.push(userId);
         await post.save();
         return res.status(200).json({ message: "Post purchased" });
@@ -264,11 +221,9 @@ export const purchasePost = async (req, res) => {
     }
 };
 
-// Add an associate to a post
 export const addAssociate = async (req, res) => {
     const { postId } = req.params;
     const { associateId } = req.body;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
@@ -282,11 +237,9 @@ export const addAssociate = async (req, res) => {
     }
 };
 
-// Remove an associate from a post
 export const removeAssociate = async (req, res) => {
     const { postId } = req.params;
     const { associateId } = req.body;
-
     try {
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ message: "Post not found" });
@@ -300,19 +253,3 @@ export const removeAssociate = async (req, res) => {
     }
 };
 
-// export {
-//     createPost,
-//     getAllPosts,
-//     getPostById,
-//     updatePost,
-//     deletePost,
-//     likePost,
-//     unlikePost,
-//     addComment,
-//     removeComment,
-//     reportPost,
-//     expressInterest,
-//     purchasePost,
-//     addAssociate,
-//     removeAssociate
-// };

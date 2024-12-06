@@ -4,21 +4,18 @@ import { Comment } from "../models/commentModel.js";
 export const createComment = async (req, res) => {
     try {
         const { user, post, text, media } = req.body;
-
         const newComment = new Comment({
             user,
             post,
             text,
             media,
         });
-
         await newComment.save();
         res.status(201).json(newComment);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 export const getComments = async (req, res) => {
     try {
@@ -30,7 +27,6 @@ export const getComments = async (req, res) => {
     }
 };
 
-
 export const getCommentById = async (req, res) => {
     try {
         const { commentId } = req.params;
@@ -41,7 +37,6 @@ export const getCommentById = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 export const updateComment = async (req, res) => {
     try {
@@ -59,7 +54,6 @@ export const updateComment = async (req, res) => {
     }
 };
 
-
 export const deleteComment = async (req, res) => {
     try {
         const { commentId } = req.params;
@@ -70,7 +64,6 @@ export const deleteComment = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 export const likeComment = async (req, res) => {
     try {
@@ -90,7 +83,6 @@ export const likeComment = async (req, res) => {
     }
 };
 
-
 export const unLikeComment = async (req, res) => {
     try {
         const { commentId } = req.params;
@@ -106,7 +98,6 @@ export const unLikeComment = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 export const reportComment = async (req, res) => {
     try {
@@ -125,7 +116,6 @@ export const reportComment = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 export const createReply = async (req, res) => {
     try {
@@ -149,7 +139,6 @@ export const createReply = async (req, res) => {
     }
 };
 
-
 export const updateReply = async (req, res) => {
     try {
         const { commentId, replyId } = req.params;
@@ -170,7 +159,6 @@ export const updateReply = async (req, res) => {
     }
 };
 
-
 export const deleteReply = async (req, res) => {
     try {
         const { commentId, replyId } = req.params;
@@ -189,7 +177,6 @@ export const deleteReply = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 
 export const likeReply = async (req, res) => {
     try {
@@ -213,7 +200,6 @@ export const likeReply = async (req, res) => {
     }
 };
 
-
 export const unLikeReply = async (req, res) => {
     try {
         const { commentId, replyId } = req.params;
@@ -234,7 +220,6 @@ export const unLikeReply = async (req, res) => {
     }
 };
 
-
 export const reportReply = async (req, res) => {
     try {
         const { commentId, replyId } = req.params;
@@ -250,7 +235,6 @@ export const reportReply = async (req, res) => {
             reply.reports.push(user);
             await comment.save();
         }
-
         res.status(200).json({ message: "Reply reported", reports: reply.reports });
     } catch (error) {
         res.status(500).json({ message: error.message });
