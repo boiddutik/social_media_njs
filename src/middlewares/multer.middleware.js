@@ -10,18 +10,28 @@ const uploadDir = path.join(rootDir, "public", "temp");
 
 try {
     fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`Directory ${uploadDir} created or already exists.`);
 } catch (error) {
     console.error("Error creating directory:", error);
 }
 
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, uploadDir);
+//     },
+//     filename: (req, file, cb) => {
+//         cb(null, `${Date.now()}-${file.originalname}`);
+//     },
+// });
+
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
+    destination: function (req, file, cb) {
+        cb(null, "./public/temp")
     },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    },
-});
+    filename: function (req, file, cb) {
+        cb(null, file.originalname)
+    }
+})
 
 export const upload = multer({
     storage,
