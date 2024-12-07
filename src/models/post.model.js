@@ -2,12 +2,6 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
     {
-        type: {
-            type: String,
-            trim: true,
-            enum: ["Post", "Event"],
-            require: true,
-        },
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Profile",
@@ -16,22 +10,10 @@ const postSchema = new mongoose.Schema(
         privacy: {
             type: String,
             trim: true,
-            enum: ["Public", "Everyone"],
-            require: true,
+            enum: ["Public", "Followers"],
+            required: true,
             index: true,
         },
-        associates: [
-            {
-                role: {
-                    type: String,
-                    enum: ["Manager", "Fighter", "Coordinator"],
-                },
-                user: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "Profile",
-                },
-            },
-        ],
         title: {
             type: String,
             trim: true,
@@ -42,32 +24,14 @@ const postSchema = new mongoose.Schema(
             trim: true,
             default: "",
         },
-        latitude: {
-            type: String,
-            trim: true,
-        },
-        longitude: {
-            type: String,
-            trim: true,
-        },
-        venue: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "GYM",
-            index: true,
-        },
-        address: {
-            type: String,
-            trim: true,
-        },
-        media: [
+        images: [
             {
-                type: {
-                    type: String,
-                    enum: ["image", "video", "reel", "highlight"],
-                },
-                url: {
-                    type: String,
-                },
+                type: String,
+            },
+        ],
+        videos: [
+            {
+                type: String,
             },
         ],
         comments: [
@@ -104,25 +68,6 @@ const postSchema = new mongoose.Schema(
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Report",
-            },
-        ],
-        conversations: {
-            type: [mongoose.Schema.Types.ObjectId],
-            ref: "Conversation",
-            default: [],
-        },
-        purchasedBy: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Profile",
-                index: true,
-            },
-        ],
-        interestedBy: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Profile",
-                index: true,
             },
         ],
     },
