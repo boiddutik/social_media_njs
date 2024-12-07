@@ -2,6 +2,8 @@ import { User } from "../models/user.model.js";
 import { Profile } from "../models/profile.model.js";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import fs from 'fs';
+import path from 'path';
 
 import { ApiError } from "../utils/api.error.js"
 
@@ -35,6 +37,26 @@ const createUser = async (req, res) => {
 
         if (!userName || !email || !password || !fullName || !dob || !profession || !avatar || !gender || !country || !state || !city) {
             return res.status(400).json({ message: "Missing required fields." });
+        }
+
+        // Check if userName already exists in the database
+        const existingUserName = await User.findOne({ userName });
+        if (existingUserName) {
+            if (avatar) fs.unlinkSync(avatar);
+            if (cover) fs.unlinkSync(cover);
+            return res.status(400).json({
+                message: `UserName ${userName} is already taken.`,
+            });
+        }
+
+        // Check if email already exists in the database
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            if (avatar) fs.unlinkSync(avatar);
+            if (cover) fs.unlinkSync(cover);
+            return res.status(400).json({
+                message: `Email ${email} is already in use.`,
+            });
         }
 
         const createdUser = await User.create({
